@@ -9,7 +9,7 @@ fit_wiod(statistic, levels_id_vector, model, pooling)
 \arguments{
 \item{statistic}{this is the data}
 
-\item{model}{is the type of model you want to run, choose from normal, log-normal, gamma, Weibull and exponential}
+\item{model}{is the type of model you want to run, choose from normal, lognormal, gamma, Weibull and exponential}
 
 \item{pooling}{is the level of pooling desired, choose from complete, partial or none}
 }

@@ -4,16 +4,16 @@
     "created" : 1548695679229.000,
     "dirty" : false,
     "encoding" : "UTF-8",
-    "folds" : "",
-    "hash" : "0",
+    "folds" : "27|22|54|3|\n57|22|93|0|\n96|22|127|3|\n97|24|127|2|\n135|22|164|3|\n167|22|201|3|\n",
+    "hash" : "3107240887",
     "id" : "AA9434B3",
-    "lastKnownWriteTime" : 1548769507,
-    "last_content_update" : 1548769507399,
+    "lastKnownWriteTime" : 1548783734,
+    "last_content_update" : 1548783734472,
     "path" : "~/Desktop/New_School/JH_networks/wiodbayes/R/fit_wiod.R",
     "project_path" : "R/fit_wiod.R",
     "properties" : {
-        "cursorPosition" : "99,0",
-        "scrollLine" : "78"
+        "cursorPosition" : "131,25",
+        "scrollLine" : "12"
     },
     "relative_order" : 1,
     "source_on_save" : false,

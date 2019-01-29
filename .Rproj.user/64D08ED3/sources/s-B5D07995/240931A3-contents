@@ -27,3 +27,18 @@ fit2 <- fit_wiod(statistic = statistic,
                  levels_id_vector = levels_id_indicator,
                  model = "normal",
                  pooling = "partial")
+######
+#checking the normal no pooling fit
+######
+fit3 <- fit_wiod(statistic = statistic,
+                 levels_id_vector = levels_id_indicator,
+                 model = "normal",
+                 pooling = "none")
+
+######
+#checking the lognormal partial pooling fit
+######
+fit4 <- fit_wiod(statistic = statistic,
+                 levels_id_vector = levels_id_indicator,
+                 model = "lognormal",
+                 pooling = "partial")

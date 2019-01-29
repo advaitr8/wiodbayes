@@ -2,7 +2,7 @@
 #'
 #' This function allows you to run a variety of Bayesian (hierarchical) models on WIOD data and key statistics to unearth persistent statistical patterns across time and countries
 #' @param statistic this is the data
-#' @param model is the type of model you want to run, choose from normal, log-normal, gamma, Weibull and exponential
+#' @param model is the type of model you want to run, choose from normal, lognormal, gamma, Weibull and exponential
 #' @param pooling is the level of pooling desired, choose from complete, partial or none
 #' @keywords wiodbayes
 #' @export
@@ -97,32 +97,144 @@ fit_wiod <- function(statistic,
   ####################
   if(model == "normal"){
     if(pooling == "none"){
+      normal_none_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+    }
+      parameters{
+        real mu[n_levels];
+        real <lower = 0> sigma[n_levels];
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ normal(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
+      }
+        mu ~ normal(0,10);
+        sigma ~ cauchy(0,20);
+      }
+      "
+      stanfit_object <- stan(model_code = normal_none_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
 
     }
   }
-  # #####################
-  # # Lognormal - Complete
-  # ####################
-  # if(model == "log-normal"){
-  #   if(pooling == "complete"){
-  #
-  #   }
-  # }
-  # #####################
-  # # Lognormal - Partial
-  # ####################
-  # if(model == "log-normal"){
-  #   if(pooling == "partial"){
-  #
-  #   }
-  # }
-  # #####################
-  # # Lognormal - None
-  # ####################
-  # if(model == "log-normal"){
-  #   if(pooling == "none"){
-  #
-  #   }
-  # }
-return(stanfit_object)
+  if(model == "lognormal"){
+    levels_id_vector <- levels_id_vector[statistic != 0]
+    statistic <- statistic[statistic != 0]
+    N <- length(statistic)
+  }
+  #####################
+  # Lognormal - Complete
+  ####################
+  if(model == "lognormal"){
+    if(pooling == "complete"){
+      lognormal_complete_model <- "
+      data{
+        int N;
+        real statistic[N];
+    }
+      parameters{
+        real mu;
+        real <lower = 0> sigma;
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ lognormal(mu,sigma);
+      }
+        mu ~ normal(0,10);
+        sigma ~ cauchy(0,20);
+      }
+      "
+      stanfit_object <- stan(model_code = lognormal_complete_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+
+    }
+  }
+  #####################
+  # Lognormal - Partial
+  ####################
+  if(model == "lognormal"){
+    if(pooling == "partial"){
+      lognormal_partial_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+    }
+      parameters{
+        real mu[n_levels];
+        real mu_all_levels;
+        real <lower = 0> tau_all_levels;
+        real <lower = 0> sigma[n_levels];
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ lognormal(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
+      }
+        mu ~ normal(mu_all_levels,tau_all_levels);
+        mu_all_levels ~ normal(0,5);
+        tau_all_levels ~ cauchy(0,20);
+        sigma ~ cauchy(0,20);
+      }
+      "
+      stanfit_object <- stan(model_code = lognormal_partial_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+  }
+  #####################
+  # Lognormal - None
+  ####################
+  if(model == "lognormal"){
+    if(pooling == "none"){
+      lognormal_none_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+    }
+      parameters{
+        real mu[n_levels];
+        real <lower = 0> sigma[n_levels];
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ lognormal(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
+      }
+        mu ~ normal(0,10);
+        sigma ~ cauchy(0,20);
+      }
+      "
+      stanfit_object <- stan(model_code = lognormal_none_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+
+  }
+  }
+  return(stanfit_object)
 }
+
+
