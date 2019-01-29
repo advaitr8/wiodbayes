@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1548695679229.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "AA9434B3",
+    "lastKnownWriteTime" : 1548769507,
+    "last_content_update" : 1548769507399,
+    "path" : "~/Desktop/New_School/JH_networks/wiodbayes/R/fit_wiod.R",
+    "project_path" : "R/fit_wiod.R",
+    "properties" : {
+        "cursorPosition" : "99,0",
+        "scrollLine" : "78"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

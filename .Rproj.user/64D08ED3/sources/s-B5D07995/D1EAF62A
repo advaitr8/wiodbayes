@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1548767318094.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3254254199",
+    "id" : "D1EAF62A",
+    "lastKnownWriteTime" : 1548577197,
+    "last_content_update" : 1548577197,
+    "path" : "~/Desktop/New_School/JH_networks/wiod_bayes/rowsums.stan",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "19,2",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "stan"
+}

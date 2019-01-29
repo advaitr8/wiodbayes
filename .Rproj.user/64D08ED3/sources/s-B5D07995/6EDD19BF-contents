@@ -1,0 +1,15 @@
+data{
+  int N;
+  real statistic[N];
+}
+parameters{
+  real mu;
+  real <lower = 0> sigma;
+}
+model{
+  for(i in 1:N){
+    statistic ~ normal(mu,sigma);
+  }
+  mu ~ normal(0,10);
+  sigma ~ cauchy(0,20);
+}

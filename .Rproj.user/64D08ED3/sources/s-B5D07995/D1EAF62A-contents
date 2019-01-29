@@ -1,0 +1,23 @@
+data{
+  int N;
+  int n_countries;
+  int country_id_rowsums[N];
+  real rowsums[N];
+}
+
+parameters{
+  real mu[n_countries];
+  real mu_c;
+  real <lower = 0> tau_c;
+  real <lower = 0> sigma;
+}
+
+model{
+  for(i in 1:N){
+   rowsums[i] ~ lognormal(mu[country_id_rowsums[i]], sigma);
+  }
+  mu ~ normal(mu_c, tau_c);
+  mu_c ~ normal(0,5);
+  tau_c ~ cauchy(0,20);
+  sigma ~ cauchy(0,20);
+}

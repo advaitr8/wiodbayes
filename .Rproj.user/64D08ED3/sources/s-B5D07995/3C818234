@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1548768067178.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1073193828",
+    "id" : "3C818234",
+    "lastKnownWriteTime" : 1548595703,
+    "last_content_update" : 1548595703,
+    "path" : "~/Desktop/New_School/JH_networks/wiod_bayes/leontief_2.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "116,0",
+        "scrollLine" : "96"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
