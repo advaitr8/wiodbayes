@@ -11,7 +11,7 @@
 #'
 
 fit_wiod <- function(statistic,
-                     levels_id_vector,
+                     levels_id_vector = 0,
                      model,
                      pooling){
   library("rstan")
@@ -53,6 +53,7 @@ fit_wiod <- function(statistic,
                               chains = 3)
     }
   }
+
   #####################
   # Normal - Partial
   ####################
@@ -91,6 +92,7 @@ fit_wiod <- function(statistic,
 
     }
   }
+
 
   #####################
   # Normal - None
@@ -131,6 +133,7 @@ fit_wiod <- function(statistic,
     statistic <- statistic[statistic != 0]
     N <- length(statistic)
   }
+
   #####################
   # Lognormal - Complete
   ####################
@@ -163,6 +166,7 @@ fit_wiod <- function(statistic,
 
     }
   }
+
   #####################
   # Lognormal - Partial
   ####################
@@ -200,6 +204,7 @@ fit_wiod <- function(statistic,
                              chains = 3)
     }
   }
+
   #####################
   # Lognormal - None
   ####################
@@ -231,9 +236,113 @@ fit_wiod <- function(statistic,
                                          "N"),
                              iter = 1000,
                              chains = 3)
+    }
+  }
 
+  #####################
+  # Skewnormal - Complete
+  ####################
+  if(model == "skew_normal"){
+    if(pooling == "complete"){
+      skew_normal_complete_model <- "
+      data{
+        int N;
+        real statistic[N];
+      }
+      parameters{
+        real mu;
+        real <lower = 0> omega;
+        real alpha;
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ skew_normal(mu, omega, alpha);
+      }
+        mu ~ normal(0,10);
+        omega ~ normal(0,2);
+        alpha ~ normal(0,0.5);
+    }
+    "
+    stanfit_object <- stan(model_code = skew_normal_complete_model,
+                           data = list("statistic",
+                                       "N"),
+                           iter = 1000,
+                           chains = 3)
+    }
+}
+
+
+  #####################
+  # Skewnormal - Partial
+  ####################
+  if(model == "skew_normal"){
+    if(pooling == "partial"){
+      skew_normal_partial_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+      }
+
+      parameters{
+        real mu[n_levels];
+        real mu_all_levels;
+        real <lower = 0> tau_mu_all_levels;
+        real <lower = 0> omega[n_levels];
+        real <lower = 0> omega_all_levels;
+        real <lower = 0> tau_omega_all_levels;
+        real alpha[n_levels];
+        real alpha_all_levels;
+        real <lower = 0> tau_alpha_all_levels;
+      }
+
+      model{
+        for(i in 1:N){
+          statistic[i] ~ skew_normal(mu[levels_id_vector[i]],
+                                     omega[levels_id_vector[i]],
+                                     alpha[levels_id_vector[i]]);
+        }
+        mu ~ normal(mu_all_levels,tau_mu_all_levels);
+        omega ~ normal(omega_all_levels, tau_omega_all_levels);
+        alpha ~ normal(alpha_all_levels,tau_alpha_all_levels);
+        mu_all_levels ~ normal(0,5);
+        omega_all_levels ~ normal(0,5);
+        alpha_all_levels ~ normal(0,5);
+        tau_mu_all_levels ~ cauchy(0,10);
+        tau_omega_all_levels ~ cauchy(0,10);
+        tau_alpha_all_levels ~ cauchy(0,10);
+      }
+      "
+      stanfit_object <- stan(model_code = skew_normal_partial_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
   }
-  }
+
+  #####################
+  # Skewnormal - None
+  ####################
+
+
+  #####################
+  # Gamma - Complete
+  ####################
+
+
+  #####################
+  # Gamma - Partial
+  ####################
+
+
+  #####################
+  # Gamma - None
+  ####################
+
   return(stanfit_object)
 }
 

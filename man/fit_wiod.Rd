@@ -4,7 +4,7 @@
 \alias{fit_wiod}
 \title{WIOD Bayesian modeling}
 \usage{
-fit_wiod(statistic, levels_id_vector, model, pooling)
+fit_wiod(statistic, levels_id_vector = 0, model, pooling)
 }
 \arguments{
 \item{statistic}{this is the data}
