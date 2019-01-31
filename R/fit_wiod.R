@@ -22,6 +22,11 @@ fit_wiod <- function(statistic,
   #pooling is the nature of pooling required across individual subsamples, the default is complete pooling
   N <- length(statistic)
   n_levels <- length(unique(levels_id_vector))
+  if(model == "lognormal"){
+    levels_id_vector <- levels_id_vector[statistic != 0]
+    statistic <- statistic[statistic != 0]
+    N <- length(statistic)
+  }
 
   #####################
   # Normal - Complete
@@ -113,9 +118,9 @@ fit_wiod <- function(statistic,
       model{
         for(i in 1:N){
           statistic[i] ~ normal(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
-      }
-        mu ~ normal(0,10);
-        sigma ~ cauchy(0,20);
+          mu[levels_id_vector[i]] ~ normal(0,10);
+          sigma[levels_id_vector[i]] ~ cauchy(0,20);
+        }
       }
       "
       stanfit_object <- stan(model_code = normal_none_model,
@@ -127,11 +132,6 @@ fit_wiod <- function(statistic,
                              chains = 3)
 
     }
-  }
-  if(model == "lognormal"){
-    levels_id_vector <- levels_id_vector[statistic != 0]
-    statistic <- statistic[statistic != 0]
-    N <- length(statistic)
   }
 
   #####################
@@ -224,9 +224,9 @@ fit_wiod <- function(statistic,
       model{
         for(i in 1:N){
           statistic[i] ~ lognormal(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
+          mu[levels_id_vector[i]] ~ normal(0,10);
+          sigma[levels_id_vector[i]] ~ cauchy(0,20);
       }
-        mu ~ normal(0,10);
-        sigma ~ cauchy(0,20);
       }
       "
       stanfit_object <- stan(model_code = lognormal_none_model,
@@ -327,7 +327,40 @@ fit_wiod <- function(statistic,
   #####################
   # Skewnormal - None
   ####################
-
+  if(model == "skew_normal"){
+    if(pooling == "none"){
+      skew_normal_none_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+      }
+      parameters{
+        real mu[n_levels];
+        real <lower = 0> omega[n_levels];
+        real alpha[n_levels];
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ skew_normal(mu[levels_id_vector[i]],
+                                     omega[levels_id_vector[i]],
+                                     alpha[levels_id_vector[i]]);
+          mu[levels_id_vector[i]] ~ normal(0,10);
+          omega[levels_id_vector[i]] ~ normal(0,5);
+          alpha[levels_id_vector[i]] ~ normal(0,1);
+        }
+      }
+      "
+      stanfit_object <- stan(model_code = skew_normal_none_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+}
 
   #####################
   # Gamma - Complete
