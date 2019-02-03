@@ -98,7 +98,6 @@ fit_wiod <- function(statistic,
     }
   }
 
-
   #####################
   # Normal - None
   ####################
