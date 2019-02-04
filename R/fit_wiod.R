@@ -365,16 +365,101 @@ fit_wiod <- function(statistic,
   # Gamma - Complete
   ####################
 
-
+  if(model == "gamma"){
+    if(pooling == "complete"){
+      gamma_complete_model <- "
+      data{
+        int N;
+        real statistic[N];
+      }
+      parameters{
+        real <lower = 0> alpha;
+        real <lower =0> beta;
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ gamma(alpha,beta);
+        }
+        alpha ~ exponential(3);
+        beta ~ exponential(3);
+      }"
+      stanfit_object <- stan(model_code = gamma_complete_model,
+                             data = list("statistic",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+  }
   #####################
   # Gamma - Partial
   ####################
 
+  if(model == "gamma"){
+    if(pooling == "partial"){
+      gamma_partial_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+      }
+      parameters{
+        real <lower = 0.1> alpha[n_levels];
+        real <lower = 0.1> lambda_alpha;
+        real <lower = 0.1> beta[n_levels];
+        real <lower = 0.1> lambda_beta;
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ gamma(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
+        }
+        alpha ~ exponential(lambda_alpha);
+        lambda_alpha ~ normal(0,5);
+        beta ~ exponential(lambda_beta);
+        lambda_beta ~ normal(0,5);
+      }"
+      stanfit_object <- stan(model_code = gamma_partial_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+}
 
   #####################
   # Gamma - None
   ####################
-
+  if(model == "gamma"){
+    if(pooling == "none"){
+      gamma_none_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+      }
+      parameters{
+        real <lower = 0.1> alpha[n_levels];
+        real <lower = 0.1> beta[n_levels];
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ gamma(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
+          alpha[levels_id_vector[i]] ~ exponential(3);
+          beta[levels_id_vector[i]] ~ exponential(3);
+        }
+      }"
+      stanfit_object <- stan(model_code = gamma_none_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+}
   return(stanfit_object)
 }
 
