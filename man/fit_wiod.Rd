@@ -9,6 +9,8 @@ fit_wiod(statistic, levels_id_vector = 0, model, pooling)
 \arguments{
 \item{statistic}{this is the data}
 
+\item{levels_id_vector}{is the vector that shows which subsample a particular observation belongs to}
+
 \item{model}{is the type of model you want to run, choose from normal, lognormal, gamma, Weibull and exponential}
 
 \item{pooling}{is the level of pooling desired, choose from complete, partial or none}

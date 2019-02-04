@@ -3,6 +3,7 @@
 #' This function allows you to run a variety of Bayesian (hierarchical) models on WIOD data and key statistics to unearth persistent statistical patterns across time and countries
 #' @param statistic this is the data
 #' @param model is the type of model you want to run, choose from normal, lognormal, gamma, Weibull and exponential
+#' @param levels_id_vector is the vector that shows which subsample a particular observation belongs to
 #' @param pooling is the level of pooling desired, choose from complete, partial or none
 #' @keywords wiodbayes
 #' @export
@@ -18,11 +19,12 @@ fit_wiod <- function(statistic,
   options(mc.cores = parallel::detectCores())
   rstan_options(auto_write = TRUE)
   #statistic is the vector of data
+  #levels_id_vector is the vector that shows which subsample a particular observation belongs to
   #model specifies the type of model to run
   #pooling is the nature of pooling required across individual subsamples, the default is complete pooling
   N <- length(statistic)
   n_levels <- length(unique(levels_id_vector))
-  if(model == "lognormal"){
+  if(model == "lognormal" || model == "weibull"){
     levels_id_vector <- levels_id_vector[statistic != 0]
     statistic <- statistic[statistic != 0]
     N <- length(statistic)
@@ -460,6 +462,199 @@ fit_wiod <- function(statistic,
                              chains = 3)
     }
 }
+
+  #####################
+  # Exponential - Complete
+  ####################
+  if(model == "exponential"){
+    if(pooling == "complete"){
+      exponential_complete_model <- "
+       data{
+        int N;
+        real statistic[N];
+      }
+      parameters{
+        real lambda;
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ exponential(lambda);
+        }
+        lambda ~ exponential(2);
+      }"
+      stanfit_object <- stan(model_code = exponential_complete_model,
+                             data = list("statistic",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+  }
+
+  #####################
+  # Exponential - Partial
+  ####################
+  if(model == "exponential"){
+    if(pooling == "partial"){
+      exponential_partial_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+    }
+      parameters{
+        real <lower = 0.1> lambda[n_levels];
+        real <lower = 0.1> theta;
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ exponential(lambda[levels_id_vector[i]]);
+        }
+        lambda ~ exponential(theta);
+        theta ~ exponential(2);
+      }
+      "
+      stanfit_object <- stan(model_code = exponential_partial_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+  }
+
+  #####################
+  # Exponential - None
+  ####################
+  if(model == "exponential"){
+    if(pooling == "none"){
+      exponential_none_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+      }
+      parameters{
+        real <lower = 0.1> lambda[n_levels];
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ exponential(lambda[levels_id_vector[i]]);
+          lambda[levels_id_vector[i]] ~ exponential(2);
+        }
+      }
+      "
+      stanfit_object <- stan(model_code = exponential_none_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+}
+
+  #####################
+  # Weibull - Complete
+  ####################
+  if(model == "weibull"){
+    if(pooling == "complete"){
+      weibull_complete_model <- "
+      data{
+        int N;
+        real statistic[N];
+      }
+      parameters{
+        real <lower = 0.1> alpha;
+        real <lower = 0.1> sigma;
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ weibull(alpha,sigma);
+      }
+        alpha ~ exponential(2);
+        sigma ~ exponential(2);
+      }"
+      stanfit_object <- stan(model_code = weibull_complete_model,
+                             data = list("statistic",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+  }
+
+  #####################
+  # Weibull - Partial
+  ####################
+  if(model == "weibull"){
+    if(pooling == "partial"){
+      weibull_partial_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+      }
+      parameters{
+        real <lower = 0.1> alpha[n_levels];
+        real <lower = 0.1> lambda_alpha;
+        real <lower = 0.1> sigma[n_levels];
+        real <lower = 0.1> lambda_sigma;
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ weibull(alpha[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+      }
+        alpha ~ exponential(lambda_alpha);
+        lambda_alpha ~ exponential(2);
+        sigma ~ exponential(lambda_sigma);
+        lambda_sigma ~ exponential(2);
+      }"
+      stanfit_object <- stan(model_code = weibull_partial_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+}
+
+  #####################
+  # Weibull - None
+  ####################
+  if(model == "weibull"){
+    if(pooling == "none"){
+      weibull_none_model <- "
+      data{
+        int N;
+        int n_levels;
+        int levels_id_vector[N];
+        real statistic[N];
+      }
+      parameters{
+        real <lower = 0.1> alpha[n_levels];
+        real <lower = 0.1> sigma[n_levels];
+      }
+      model{
+        for(i in 1:N){
+          statistic[i] ~ weibull(alpha[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+          alpha[levels_id_vector[i]] ~ exponential(2);
+          sigma[levels_id_vector[i]] ~ exponential(2);
+        }
+      }"
+      stanfit_object <- stan(model_code = weibull_none_model,
+                             data = list("statistic",
+                                         "levels_id_vector",
+                                         "n_levels",
+                                         "N"),
+                             iter = 1000,
+                             chains = 3)
+    }
+  }
+
   return(stanfit_object)
 }
 
