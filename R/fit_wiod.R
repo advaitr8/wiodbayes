@@ -24,7 +24,7 @@ fit_wiod <- function(statistic,
   #pooling is the nature of pooling required across individual subsamples, the default is complete pooling
   N <- length(statistic)
   n_levels <- length(unique(levels_id_vector))
-  if(model == "lognormal" || model == "weibull"){
+  if(model == "lognormal" || model == "weibull" || model == "skew_normal"){
     levels_id_vector <- levels_id_vector[statistic != 0]
     statistic <- statistic[statistic != 0]
     N <- length(statistic)
@@ -288,14 +288,14 @@ fit_wiod <- function(statistic,
 
       parameters{
         real mu[n_levels];
-        real mu_all_levels;
-        real <lower = 0> tau_mu_all_levels;
-        real <lower = 0> omega[n_levels];
-        real <lower = 0> omega_all_levels;
-        real <lower = 0> tau_omega_all_levels;
+        # real mu_all_levels;
+        # real <lower = 0> tau_mu_all_levels;
+        real <lower = 0.1> omega[n_levels];
+        # real <lower = 0.1> omega_all_levels;
+        # real <lower = 0> tau_omega_all_levels;
         real alpha[n_levels];
-        real alpha_all_levels;
-        real <lower = 0> tau_alpha_all_levels;
+        # real alpha_all_levels;
+        # real <lower = 0> tau_alpha_all_levels;
       }
 
       model{
@@ -304,15 +304,15 @@ fit_wiod <- function(statistic,
                                      omega[levels_id_vector[i]],
                                      alpha[levels_id_vector[i]]);
         }
-        mu ~ normal(mu_all_levels,tau_mu_all_levels);
-        omega ~ normal(omega_all_levels, tau_omega_all_levels);
-        alpha ~ normal(alpha_all_levels,tau_alpha_all_levels);
-        mu_all_levels ~ normal(0,5);
-        omega_all_levels ~ normal(0,5);
-        alpha_all_levels ~ normal(0,5);
-        tau_mu_all_levels ~ cauchy(0,10);
-        tau_omega_all_levels ~ cauchy(0,10);
-        tau_alpha_all_levels ~ cauchy(0,10);
+        # mu ~ normal(mu_all_levels,tau_mu_all_levels);
+        # omega ~ normal(omega_all_levels, tau_omega_all_levels);
+        # alpha ~ normal(alpha_all_levels,tau_alpha_all_levels);
+        # mu_all_levels ~ normal(0,5);
+        # omega_all_levels ~ gamma(2,2);
+        # alpha_all_levels ~ normal(0,5);
+        # tau_mu_all_levels ~ cauchy(0,10);
+        # tau_omega_all_levels ~ cauchy(0,10);
+        # tau_alpha_all_levels ~ cauchy(0,10);
       }
       "
       stanfit_object <- stan(model_code = skew_normal_partial_model,
@@ -443,14 +443,14 @@ fit_wiod <- function(statistic,
         real statistic[N];
       }
       parameters{
-        real <lower = 0.1> alpha[n_levels];
-        real <lower = 0.1> beta[n_levels];
+        real <lower = 0.1, upper = 2> alpha[n_levels];
+        real <lower = 0.1, upper = 2> beta[n_levels];
       }
       model{
         for(i in 1:N){
           statistic[i] ~ gamma(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
-          alpha[levels_id_vector[i]] ~ exponential(3);
-          beta[levels_id_vector[i]] ~ exponential(3);
+          # alpha[levels_id_vector[i]] ~ exponential(3);
+          # beta[levels_id_vector[i]] ~ exponential(3);
         }
       }"
       stanfit_object <- stan(model_code = gamma_none_model,
