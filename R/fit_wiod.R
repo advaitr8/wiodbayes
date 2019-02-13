@@ -18,13 +18,14 @@ fit_wiod <- function(statistic,
   library("rstan")
   options(mc.cores = parallel::detectCores())
   rstan_options(auto_write = TRUE)
+  library("loo")
   #statistic is the vector of data
   #levels_id_vector is the vector that shows which subsample a particular observation belongs to
   #model specifies the type of model to run
   #pooling is the nature of pooling required across individual subsamples, the default is complete pooling
   N <- length(statistic)
   n_levels <- length(unique(levels_id_vector))
-  if(model == "lognormal" || model == "weibull" || model == "skew_normal"){
+  if(model == "lognormal" || model == "weibull"){
     levels_id_vector <- levels_id_vector[statistic != 0]
     statistic <- statistic[statistic != 0]
     N <- length(statistic)
@@ -51,6 +52,14 @@ fit_wiod <- function(statistic,
       }
         mu ~ normal(0,10);
         sigma ~ cauchy(0,20);
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = normal_rng(mu,sigma);
+          log_lik[i] = normal_lpdf(statistic[i] | mu, sigma);
+        }
       }
       "
       stanfit_object <- stan(model_code = normal_complete_model,
@@ -88,6 +97,14 @@ fit_wiod <- function(statistic,
         tau_all_levels ~ cauchy(0,20);
         sigma ~ cauchy(0,20);
       }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = normal_rng(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
+          log_lik[i] = normal_lpdf(statistic[i] | mu[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+        }
+      }
       "
       stanfit_object <- stan(model_code = normal_partial_model,
                              data = list("statistic",
@@ -123,6 +140,14 @@ fit_wiod <- function(statistic,
           sigma[levels_id_vector[i]] ~ cauchy(0,20);
         }
       }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = normal_rng(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
+          log_lik[i] = normal_lpdf(statistic[i] | mu[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+        }
+      }
       "
       stanfit_object <- stan(model_code = normal_none_model,
                              data = list("statistic",
@@ -155,6 +180,14 @@ fit_wiod <- function(statistic,
       }
         mu ~ normal(0,10);
         sigma ~ cauchy(0,20);
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = lognormal_rng(mu,sigma);
+          log_lik[i] = lognormal_lpdf(statistic[i] | mu, sigma);
+        }
       }
       "
       stanfit_object <- stan(model_code = lognormal_complete_model,
@@ -195,6 +228,14 @@ fit_wiod <- function(statistic,
         tau_all_levels ~ cauchy(0,20);
         sigma ~ cauchy(0,20);
       }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = lognormal_rng(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
+          log_lik[i] = lognormal_lpdf(statistic[i] | mu[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+        }
+      }
       "
       stanfit_object <- stan(model_code = lognormal_partial_model,
                              data = list("statistic",
@@ -227,7 +268,15 @@ fit_wiod <- function(statistic,
           statistic[i] ~ lognormal(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
           mu[levels_id_vector[i]] ~ normal(0,10);
           sigma[levels_id_vector[i]] ~ cauchy(0,20);
+        }
       }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = lognormal_rng(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
+          log_lik[i] = lognormal_lpdf(statistic[i] | mu[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+        }
       }
       "
       stanfit_object <- stan(model_code = lognormal_none_model,
@@ -262,7 +311,15 @@ fit_wiod <- function(statistic,
         mu ~ normal(0,10);
         omega ~ normal(0,2);
         alpha ~ normal(0,0.5);
-    }
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = skew_normal_rng(mu,sigma);
+          log_lik[i] = skew_normal_lpdf(statistic[i] | mu, sigma);
+        }
+      }
     "
     stanfit_object <- stan(model_code = skew_normal_complete_model,
                            data = list("statistic",
@@ -352,6 +409,14 @@ fit_wiod <- function(statistic,
           alpha[levels_id_vector[i]] ~ normal(0,1);
         }
       }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = skew_normal_rng(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
+          log_lik[i] = skew_normal_lpdf(statistic[i] | mu[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+      }
+    }
       "
       stanfit_object <- stan(model_code = skew_normal_none_model,
                              data = list("statistic",
@@ -384,7 +449,16 @@ fit_wiod <- function(statistic,
         }
         alpha ~ exponential(3);
         beta ~ exponential(3);
-      }"
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = gamma_rng(alpha, beta);
+          log_lik[i] = gamma_lpdf(statistic[i] | alpha, beta);
+        }
+      }
+      "
       stanfit_object <- stan(model_code = gamma_complete_model,
                              data = list("statistic",
                                          "N"),
@@ -419,7 +493,16 @@ fit_wiod <- function(statistic,
         lambda_alpha ~ normal(0,5);
         beta ~ exponential(lambda_beta);
         lambda_beta ~ normal(0,5);
-      }"
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred = gamma_rng(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
+          log_lik[i] = gamma_lpdf(statistic[i] | alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
+        }
+      }
+      "
       stanfit_object <- stan(model_code = gamma_partial_model,
                              data = list("statistic",
                                          "levels_id_vector",
@@ -452,7 +535,15 @@ fit_wiod <- function(statistic,
           # alpha[levels_id_vector[i]] ~ exponential(3);
           # beta[levels_id_vector[i]] ~ exponential(3);
         }
-      }"
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred = gamma_rng(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
+          log_lik[i] = gamma_lpdf(statistic[i] | alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
+      }
+    }"
       stanfit_object <- stan(model_code = gamma_none_model,
                              data = list("statistic",
                                          "levels_id_vector",
@@ -481,7 +572,16 @@ fit_wiod <- function(statistic,
           statistic[i] ~ exponential(lambda);
         }
         lambda ~ exponential(2);
-      }"
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = exponential_rng(lambda);
+          log_lik[i] = exponential_lpdf(statistic[i] | lambda)
+        }
+      }
+      "
       stanfit_object <- stan(model_code = exponential_complete_model,
                              data = list("statistic",
                                          "N"),
@@ -512,6 +612,14 @@ fit_wiod <- function(statistic,
         }
         lambda ~ exponential(theta);
         theta ~ exponential(2);
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = exponential_rng(lambda[levels_id_vector[i]]);
+          log_lik[i] = exponential_lpdf(statistic[i] | lambda[levels_id_vector[i]])
+        }
       }
       "
       stanfit_object <- stan(model_code = exponential_partial_model,
@@ -545,6 +653,15 @@ fit_wiod <- function(statistic,
           lambda[levels_id_vector[i]] ~ exponential(2);
         }
       }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = exponential_rng(lambda[levels_id_vector[i]]);
+          log_lik[i] = exponential_lpdf(statistic[i] | lambda[levels_id_vector[i]])
+        }
+      }
+
       "
       stanfit_object <- stan(model_code = exponential_none_model,
                              data = list("statistic",
@@ -576,7 +693,16 @@ fit_wiod <- function(statistic,
       }
         alpha ~ exponential(2);
         sigma ~ exponential(2);
-      }"
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = weibull_rng(alpha, sigma);
+          log_lik[i] = weibull_lpdf(statistic[i] | alpha, sigma);
+        }
+      }
+      "
       stanfit_object <- stan(model_code = weibull_complete_model,
                              data = list("statistic",
                                          "N"),
@@ -611,7 +737,16 @@ fit_wiod <- function(statistic,
         lambda_alpha ~ exponential(2);
         sigma ~ exponential(lambda_sigma);
         lambda_sigma ~ exponential(2);
-      }"
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = weibull_rng(alpha[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+          log_lik[i] = weibull_lpdf(statistic[i] | alpha[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+        }
+      }
+      "
       stanfit_object <- stan(model_code = weibull_partial_model,
                              data = list("statistic",
                                          "levels_id_vector",
@@ -644,7 +779,16 @@ fit_wiod <- function(statistic,
           alpha[levels_id_vector[i]] ~ exponential(2);
           sigma[levels_id_vector[i]] ~ exponential(2);
         }
-      }"
+      }
+      generated quantities{
+        real statistic_pred[N];
+        vector[N] log_lik;
+        for(i in 1:N){
+          statistic_pred[i] = weibull_rng(alpha[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+          log_lik[i] = weibull_lpdf(statistic[i] | alpha[levels_id_vector[i]], sigma[levels_id_vector[i]]);
+      }
+    }
+      "
       stanfit_object <- stan(model_code = weibull_none_model,
                              data = list("statistic",
                                          "levels_id_vector",
