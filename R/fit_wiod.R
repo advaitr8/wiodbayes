@@ -54,10 +54,10 @@ fit_wiod <- function(statistic,
         sigma ~ cauchy(0,20);
       }
       generated quantities{
-        real statistic_pred[N];
+        # real statistic_pred[N];
         vector[N] log_lik;
         for(i in 1:N){
-          statistic_pred[i] = normal_rng(mu,sigma);
+          # statistic_pred[i] = normal_rng(mu,sigma);
           log_lik[i] = normal_lpdf(statistic[i] | mu, sigma);
         }
       }
@@ -799,6 +799,9 @@ fit_wiod <- function(statistic,
     }
   }
 
+  ######
+  # returning the Stanfit object
+  ######
   return(stanfit_object)
 }
 
