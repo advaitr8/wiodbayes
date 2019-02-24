@@ -85,17 +85,21 @@ fit_wiod <- function(statistic,
       parameters{
         real mu[n_levels];
         real mu_all_levels;
-        real <lower = 0> tau_all_levels;
+        real <lower = 0> tau_mu_all_levels;
         real <lower = 0> sigma[n_levels];
+        real <lower = 0> sigma_all_levels;
+        real <lower = 0> tau_sigma_all_levels;
       }
       model{
         for(i in 1:N){
           statistic[i] ~ normal(mu[levels_id_vector[i]],sigma[levels_id_vector[i]]);
       }
-        mu ~ normal(mu_all_levels,tau_all_levels);
+        mu ~ normal(mu_all_levels,tau_mu_all_levels);
         mu_all_levels ~ normal(0,5);
-        tau_all_levels ~ cauchy(0,20);
-        sigma ~ cauchy(0,20);
+        tau_mu_all_levels ~ cauchy(0,20);
+        sigma ~ cauchy(sigma_all_levels,tau_sigma_all_levels);
+        sigma_all_levels ~ normal(0,0.1);
+        tau_sigma_all_levels ~ normal(10,0.1);
       }
       generated quantities{
         real statistic_pred[N];
@@ -498,7 +502,7 @@ fit_wiod <- function(statistic,
         real statistic_pred[N];
         vector[N] log_lik;
         for(i in 1:N){
-          statistic_pred = gamma_rng(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
+          statistic_pred[i] = gamma_rng(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
           log_lik[i] = gamma_lpdf(statistic[i] | alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
         }
       }
@@ -532,15 +536,15 @@ fit_wiod <- function(statistic,
       model{
         for(i in 1:N){
           statistic[i] ~ gamma(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
-          # alpha[levels_id_vector[i]] ~ exponential(3);
-          # beta[levels_id_vector[i]] ~ exponential(3);
+          alpha[levels_id_vector[i]] ~ exponential(3);
+          beta[levels_id_vector[i]] ~ exponential(3);
         }
       }
       generated quantities{
         real statistic_pred[N];
         vector[N] log_lik;
         for(i in 1:N){
-          statistic_pred = gamma_rng(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
+          statistic_pred[i] = gamma_rng(alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
           log_lik[i] = gamma_lpdf(statistic[i] | alpha[levels_id_vector[i]], beta[levels_id_vector[i]]);
       }
     }"
@@ -734,9 +738,9 @@ fit_wiod <- function(statistic,
           statistic[i] ~ weibull(alpha[levels_id_vector[i]], sigma[levels_id_vector[i]]);
       }
         alpha ~ exponential(lambda_alpha);
-        lambda_alpha ~ exponential(2);
+        lambda_alpha ~ exponential(0.5);
         sigma ~ exponential(lambda_sigma);
-        lambda_sigma ~ exponential(2);
+        lambda_sigma ~ exponential(0.5);
       }
       generated quantities{
         real statistic_pred[N];
