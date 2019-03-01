@@ -19,7 +19,7 @@ loo_wiod <- function(stanfit_object){
   r_eff <- relative_eff(exp(log_lik))
 
   loo_object <- loo(log_lik,
-                    # r_eff = r_eff
-                    )
+                    r_eff = r_eff,
+                    cores = parallel::detectCores())
   return(loo_object)
 }
