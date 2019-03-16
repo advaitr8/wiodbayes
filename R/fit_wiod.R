@@ -666,7 +666,7 @@ fit_wiod <- function(statistic,
         vector[N] log_lik;
         for(i in 1:N){
           statistic_pred[i] = exponential_rng(lambda[levels_id_vector[i]]);
-          log_lik[i] = exponential_lpdf(statistic[i] | lambda[levels_id_vector[i]])
+          log_lik[i] = exponential_lpdf(statistic[i] | lambda[levels_id_vector[i]]);
         }
       }
 
