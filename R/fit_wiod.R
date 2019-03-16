@@ -222,6 +222,8 @@ fit_wiod <- function(statistic,
         real mu_all_levels;
         real <lower = 0> tau_all_levels;
         real <lower = 0> sigma[n_levels];
+        real <lower = 0> sigma_all_levels;
+        real <lower = 0> tau_sigma_all_levels;
       }
       model{
         for(i in 1:N){
@@ -230,7 +232,9 @@ fit_wiod <- function(statistic,
         mu ~ normal(mu_all_levels,tau_all_levels);
         mu_all_levels ~ normal(0,5);
         tau_all_levels ~ cauchy(0,20);
-        sigma ~ cauchy(0,20);
+        sigma ~ cauchy(sigma_all_levels,tau_sigma_all_levels);
+        sigma_all_levels ~ normal(0,0.1);
+        tau_sigma_all_levels ~ normal(10,0.1);
       }
       generated quantities{
         # real statistic_pred[N];
